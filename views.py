@@ -7,7 +7,10 @@ import config
 def is_admin(member: discord.Member):
     return any(role.id == config.ADMIN_ROLE_ID for role in member.roles)
 
-class ReviewModal(Modal, title="Анкета на отзыв"):
+class ReviewModal(Modal):
+    def __init__(self):
+        super().__init__(title="Анкета на отзыв")
+        
     admin_name = InputText(label="Ник Админа", placeholder="Введите ник администратора", required=True)
     stars = InputText(label="Звезды (от 0 до 10)", placeholder="Например: 10", required=True, max_length=2)
     review_text = InputText(label="Отзыв (необязательно)", style=discord.InputTextStyle.paragraph, required=False, max_length=800)
@@ -87,17 +90,17 @@ class PunishmentView(discord.ui.View):
         super().__init__(timeout=60)
         self.add_item(ActionSelect(target_member, reason))
 
-class EmbedEditModal(Modal, title="Редактирование Эмбеда"):
-    embed_title = InputText(label="Заголовок", required=True, max_length=256)
-    embed_desc = InputText(label="Описание / Текст", style=discord.InputTextStyle.paragraph, required=True, max_length=2000)
-    embed_color = InputText(label="Цвет (HEX код, например: #ff0000)", required=False, default="#00ff00", max_length=7)
-
+class EmbedEditModal(Modal):
     def __init__(self, current_embed, view_builder):
-        super().__init__()
+        super().__init__(title="Редактирование Эмбеда")
         self.current_embed = current_embed
         self.view_builder = view_builder
         self.embed_title.default = current_embed.title
         self.embed_desc.default = current_embed.description
+
+    embed_title = InputText(label="Заголовок", required=True, max_length=256)
+    embed_desc = InputText(label="Описание / Текст", style=discord.InputTextStyle.paragraph, required=True, max_length=2000)
+    embed_color = InputText(label="Цвет (HEX код, например: #ff0000)", required=False, default="#00ff00", max_length=7)
 
     async def on_submit(self, interaction: discord.Interaction):
         self.current_embed.title = self.embed_title.value
@@ -129,4 +132,3 @@ class EmbedBuilderView(discord.ui.View):
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.edit_message(content="❌ Создание эмбеда отменено. Панель удалена.", embed=None, view=None)
         self.stop()
-
