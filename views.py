@@ -1,4 +1,5 @@
 import discord
+from discord.ui import Modal, TextInput
 import datetime
 import database as db
 import config
@@ -6,10 +7,10 @@ import config
 def is_admin(member: discord.Member):
     return any(role.id == config.ADMIN_ROLE_ID for role in member.roles)
 
-class ReviewModal(discord.ui.Modal, title="Анкета на отзыв"):
-    admin_name = discord.ui.TextInput(label="Ник Админа", placeholder="Введите ник администратора", required=True)
-    stars = discord.ui.TextInput(label="Звезды (от 0 до 10)", placeholder="Например: 10", required=True, max_length=2)
-    review_text = discord.ui.TextInput(label="Отзыв (необязательно)", style=discord.TextStyle.paragraph, required=False, max_length=800)
+class ReviewModal(Modal, title="Анкета на отзыв"):
+    admin_name = TextInput(label="Ник Админа", placeholder="Введите ник администратора", required=True)
+    stars = TextInput(label="Звезды (от 0 до 10)", placeholder="Например: 10", required=True, max_length=2)
+    review_text = TextInput(label="Отзыв (необязательно)", style=discord.TextStyle.paragraph, required=False, max_length=800)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -69,13 +70,13 @@ class ActionSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         if not is_admin(interaction.user): return await interaction.response.send_message("⛔ Нет прав.", ephemeral=True)
         try:
-            if self.values[0] == "ban":
+            if self.values == "ban":
                 await self.target_member.ban(reason=self.reason)
                 await interaction.response.edit_message(content=f"🔨 **{self.target_member}** забанен. Причина: *{self.reason}*", view=None)
-            elif self.values[0] == "kick":
+            elif self.values == "kick":
                 await self.target_member.kick(reason=self.reason)
                 await interaction.response.edit_message(content=f"👢 **{self.target_member}** кикнут. Причина: *{self.reason}*", view=None)
-            elif self.values[0] == "timeout":
+            elif self.values == "timeout":
                 await self.target_member.timeout(datetime.timedelta(hours=1), reason=self.reason)
                 await interaction.response.edit_message(content=f"🔇 **{self.target_member}** замучен на 1 час. Причина: *{self.reason}*", view=None)
         except Exception as e:
@@ -86,10 +87,10 @@ class PunishmentView(discord.ui.View):
         super().__init__(timeout=60)
         self.add_item(ActionSelect(target_member, reason))
 
-class EmbedEditModal(discord.ui.Modal, title="Редактирование Эмбеда"):
-    embed_title = discord.ui.TextInput(label="Заголовок", required=True, max_length=256)
-    embed_desc = discord.ui.TextInput(label="Описание / Текст", style=discord.TextStyle.paragraph, required=True, max_length=2000)
-    embed_color = discord.ui.TextInput(label="Цвет (HEX код, например: #ff0000)", required=False, default="#00ff00", max_length=7)
+class EmbedEditModal(Modal, title="Редактирование Эмбеда"):
+    embed_title = TextInput(label="Заголовок", required=True, max_length=256)
+    embed_desc = TextInput(label="Описание / Текст", style=discord.TextStyle.paragraph, required=True, max_length=2000)
+    embed_color = TextInput(label="Цвет (HEX код, например: #ff0000)", required=False, default="#00ff00", max_length=7)
 
     def __init__(self, current_embed, view_builder):
         super().__init__()
@@ -112,7 +113,7 @@ class EmbedBuilderView(discord.ui.View):
     def __init__(self, channel: discord.TextChannel):
         super().__init__(timeout=300)
         self.channel = channel
-        self.embed = discord.Embed(title="Временный Заголовок", description="Временный текст эмбеда.", color=discord.Color.green())
+        self.embed = discord.Embed(title="Временный Заголовок", description="Временный text эмбеда.", color=discord.Color.green())
 
     @discord.ui.button(label="📝 Изменить текст/цвет", style=discord.ButtonStyle.primary)
     async def edit_fields(self, interaction: discord.Interaction, button: discord.ui.Button):
